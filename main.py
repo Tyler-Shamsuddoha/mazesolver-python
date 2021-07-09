@@ -2,7 +2,12 @@
 # from collections import deque
 import queue
 import time
+from collections import deque
+
 from colorama import init, Fore
+import pygame
+
+from node import Node
 
 init()
 directions = ("R", "L", "U", "D")
@@ -67,7 +72,6 @@ def print_maze(maze, finished_path):
                 print("+ ", end="")
             else:
                 print(maze[row][col] + " ", end="")
-        print()
 
 
 def print_unsolved_maze(maze):
@@ -151,10 +155,11 @@ def valid(maze, moves):
 
 
 def do_breadth_first():
-    global start_time
-    print("Attempting breadth first search...")
-    start_time = time.time()
     maze = hardcoded_maze()
+    map_nodes(maze)
+    global start_time
+    start_time = time.time()
+    print("Attempting breadth first search...")
     nums = queue.Queue()
     nums.put("")
     add = ""
@@ -169,6 +174,68 @@ def do_breadth_first():
 
 def do_depth_first():
     pass
+
+
+def map_nodes(maze):
+    nodes_list = []
+
+    for i in range(0, len(maze)):
+        for j in range(0, len(maze[i])):
+            if maze[i][j] == "█":
+                node = Node(xPos=i, yPos=j, isWall=True)
+            elif maze[i][j] == "F":
+                node = Node(xPos=i, yPos=j, isWall=True)
+                node.isGoal = True
+            elif maze[i][j] == "S":
+                node = Node(xPos=i, yPos=j, isWall=True)
+                node.isStart = True
+            else:
+                node = Node(xPos=i, yPos=j, isWall=False)
+            nodes_list.append(node)
+
+    for n in nodes_list:
+        print(n)
+    redraw_maze(maze, nodes_list)
+
+
+def redraw_maze(maze, nodes_list):
+    pygame.init()
+    white = (255, 255, 255)
+    black = (0, 0, 0)
+    blue = (0, 0, 255)
+    green = (0, 255, 0)
+    red = (255, 0, 0)
+
+    gameDisplay = pygame.display.set_mode((800, 800))
+    pygame.display.set_caption("Maze Solver")
+
+    # pygame.display.update()
+
+    gameExit = False
+
+    while not gameExit:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                gameExit = True
+
+        gameDisplay.fill(white)
+        height = 90
+        width = 90
+        # Draws maze in pygame
+        for node in nodes_list:
+            if node.isStart:
+                pygame.draw.rect(gameDisplay, green, [height + (node.xPos * 70), width + (node.yPos * 70), 70, 70])
+            elif node.isGoal:
+                pygame.draw.rect(gameDisplay, red, [height + (node.xPos * 70), width + (node.yPos * 70), 70, 70])
+            elif node.isWall:
+                pygame.draw.rect(gameDisplay, black, [height + (node.xPos * 70), width + (node.yPos * 70), 70, 70])
+            else:
+                pygame.draw.rect(gameDisplay, blue, [height + (node.xPos * 70), width + (node.yPos * 70), 70, 70])
+
+        pygame.display.update()
+
+    pygame.quit()
+    quit()
 
 
 def print_menu():
@@ -189,8 +256,7 @@ if __name__ == '__main__':
             do_breadth_first()
             break
         elif action == 2:
-            print("2 was selected")
-            # do_depth_first()
+            do_depth_first()
             break
         elif action == 3:
             # do_astar()
